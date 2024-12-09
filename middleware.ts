@@ -1,12 +1,17 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 
-const isPublicRoute = createRouteMatcher(['/signin', '/signup', '/', '/home']);
+const isPublicRoute = createRouteMatcher([
+  '/sign-in',
+  '/sign-up',
+  '/',
+  '/home'
+]);
 
 const isPublicApiRoute = createRouteMatcher(['/api/videos']);
 
-export default clerkMiddleware((auth, req) => {
-  const { userId } = auth();
+export default clerkMiddleware(async (auth, req) => {
+  const { userId } = await auth();
   const currentUrl = new URL(req.url);
   const isHomePage = currentUrl.pathname === '/home';
   const isApiRequest = currentUrl.pathname.startsWith('/api');
@@ -19,12 +24,12 @@ export default clerkMiddleware((auth, req) => {
   if (!userId) {
     // if user is not logged in and trying to access a private route
     if (!isPublicRoute(req) && !isPublicApiRoute(req)) {
-      return NextResponse.redirect(new URL('/signin', req.url).toString());
+      return NextResponse.redirect(new URL('/sign-in', req.url).toString());
     }
 
     // if user is not logged in and trying to access an API route that is not public
     if (isApiRequest && !isPublicApiRoute(req)) {
-      return NextResponse.redirect(new URL('/signin', req.url).toString());
+      return NextResponse.redirect(new URL('/sign-in', req.url).toString());
     }
   }
   NextResponse.next();
